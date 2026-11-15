@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-paper text-ink font-body antialiased; }
+h1, h2, h3 { @apply font-display; }
+h1 { @apply text-4xl font-light leading-[1.08] tracking-tight; }
+h1 b { @apply font-bold; }
+:focus-visible { outline: 3px solid #15141A; outline-offset: 2px; }
+
+@layer components {
+  .btn { @apply inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-white transition active:scale-95 disabled:opacity-50; }
+  .btn-accent { @apply bg-marigold text-ink; }
+  .btn-ghost { @apply bg-transparent text-ink ring-1 ring-ink; }
+  .field { @apply w-full rounded-2xl border border-line bg-white px-4 py-3 text-[15px] outline-none focus:border-ink; }
+  .badge { @apply inline-flex items-center gap-1 rounded-full bg-[#E3F6EA] px-2.5 py-1 text-xs font-semibold text-[#0B6B33]; }
+  .hand { font-family: var(--font-hand), cursive; @apply text-xl leading-none; }
+  .go { @apply flex h-10 w-10 items-center justify-center rounded-full bg-white/60; }
+}
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

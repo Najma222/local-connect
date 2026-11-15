@@ -1,0 +1,47 @@
+'use client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useApp } from '@/lib/app-context';
+
+export default function Profile() {
+  const { user, profile, ready, refreshProfile } = useApp();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  if (ready && !user) return (
+    <div className="mt-8 max-w-md"><h1>Your <b>profile</b></h1><p className="mt-3">Log in to see orders, needs and your shop.</p><Link href="/login?next=/profile" className="btn mt-4">Log in</Link></div>
+  );
+  if (!profile) return <p className="mt-8">Loading…</p>;
+
+  const isShop = profile.role === 'shop', isAdmin = profile.role === 'admin';
+  const switchMode = async () => {
+    setBusy(true); setErr('');
+    const role = isShop ? 'customer' : 'shop';
+    const { error } = await supabase.from('profiles').update({ role }).eq('id', user.id);
+    if (error) { setBusy(false); return setErr(error.message); }
+    await refreshProfile(); setBusy(false);
+    if (role === 'shop') router.push('/dashboard');
+  };
+  const rows = [['/orders', 'My orders', 'Track what you ordered'], ['/needs', 'My needs', 'Quick requests and replies'], ['/cart', 'My cart', 'Items waiting to be ordered']];
+  if (isShop) rows.unshift(['/dashboard', 'My shop', 'Orders, items and requests']);
+  if (isAdmin) rows.unshift(['/admin', 'Admin', 'Verify shops']);
+
+  return (
+    <div className="max-w-xl">
+      <p className="mt-5 text-sm text-ink/60">Profile</p>
+      <h1 className="mt-1">{profile.full_name || 'Neighbour'}</h1>
+      <p className="mt-1 text-sm text-ink/60">{user.email} · {isAdmin ? 'Admin' : isShop ? 'Seller mode' : 'Buyer mode'}</p>
+      <ul className="mt-6 space-y-3">
+        {rows.map(([href, t, s]) => (
+          <li key={href}><Link href={href} className="flex items-center justify-between rounded-[24px] bg-white p-4 shadow-sm"><span><b className="block">{t}</b><span className="text-sm text-ink/60">{s}</span></span><span className="go bg-soft">→</span></Link></li>
+        ))}
+      </ul>
+      {!isAdmin && <button className="btn btn-accent mt-6 w-full" disabled={busy} onClick={switchMode}>{isShop ? 'Switch to buyer mode' : 'Switch to seller mode and open a shop'}</button>}
+      {err && <p className="mt-2 text-sm text-tomato" role="alert">{err}</p>}
+      <button className="btn btn-ghost mt-3 w-full" onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}>Log out</button>
+    </div>
+  );
+}
