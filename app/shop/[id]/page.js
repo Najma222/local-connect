@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useApp } from '@/lib/app-context';
 import { catOf, rupee } from '@/lib/constants';
 import Doodle from '@/components/Doodle';
+import ItemDoodle from '@/components/ItemDoodle';
 import Dialog from '@/components/Dialog';
 import { useToast } from '@/components/Toast';
 import { Loading, Empty } from '@/components/States';
@@ -71,7 +72,7 @@ export default function ShopPage() {
             return (
               <article key={p.id} className="flex min-w-0 flex-col overflow-hidden rounded-[28px]" style={{ background: cat.bg, color: cat.fg }}>
                 <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden">
-                  {p.image_url ? <img src={p.image_url} alt={p.name} width="400" height="300" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <span className="block h-24 w-24"><Doodle k={cat.doodle} blob={cat.blob} size="100%" rotate={4} /></span>}
+                  {p.image_url ? <img src={p.image_url} alt={p.name} width="400" height="300" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <span className="block h-24 w-24"><ItemDoodle name={p.name} description={p.description} fallback={cat.doodle} blob={cat.blob} size="100%" /></span>}
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <h3 className="line-clamp-2 break-words font-bold">{p.name}</h3>

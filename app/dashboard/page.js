@@ -3,9 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase, uploadImage } from '@/lib/supabase';
 import { useApp } from '@/lib/app-context';
-import { CATEGORIES, STATUSES, rupee } from '@/lib/constants';
+import { CATEGORIES, STATUSES, catOf, rupee } from '@/lib/constants';
 import { here } from '@/lib/geo';
 import Dialog from '@/components/Dialog';
+import ItemDoodle from '@/components/ItemDoodle';
 import { useToast } from '@/components/Toast';
 import { Loading, Empty, ErrorState, Spinner } from '@/components/States';
 
@@ -242,6 +243,10 @@ function Products({ shop }) {
           <input type="file" accept="image/*" className={FILE} onChange={pick} />
         </label>
         <button type="button" className="btn btn-ghost mt-2 h-auto min-h-12 w-full whitespace-normal py-2 text-center" disabled={!file || ai} onClick={fillAI}>{ai && <Spinner />}{ai ? 'Reading photo…' : 'Fill name, price and description with AI'}</button>
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-paper p-2">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white">{imgUrl ? <img src={imgUrl} alt="" width="56" height="56" className="h-full w-full object-cover" /> : <ItemDoodle name={f.name} description={f.description} fallback={catOf(shop.category).doodle} blob={catOf(shop.category).blob} size="100%" />}</div>
+          <p className="min-w-0 text-sm text-ink/70">{imgUrl ? 'Your photo will be shown.' : 'No photo? We draw a little doodle from the name.'}</p>
+        </div>
         <div className="mt-3 space-y-3">
           <input required className="field" placeholder="Name" aria-label="Name" autoComplete="off" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
           <input required type="number" min="0" inputMode="decimal" className="field" placeholder="Price in ₹" aria-label="Price in rupees" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} />
@@ -256,7 +261,7 @@ function Products({ shop }) {
         {list && list.length === 0 && !loadErr && <Empty>Nothing listed yet. Add your first item above.</Empty>}
         {(list || []).map((p) => (
           <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-line">
-            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-paper">{p.image_url && <img src={p.image_url} alt="" width="56" height="56" loading="lazy" decoding="async" className="h-full w-full object-cover" />}</div>
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-paper">{p.image_url ? <img src={p.image_url} alt="" width="56" height="56" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <ItemDoodle name={p.name} description={p.description} fallback={catOf(shop.category).doodle} blob={catOf(shop.category).blob} size="100%" />}</div>
             <div className="min-w-0 flex-1 basis-32"><p className="line-clamp-2 break-words font-semibold">{p.name}</p><p className="text-sm text-ink/70">{rupee(p.price)}{p.in_stock ? '' : ' · out of stock'}</p></div>
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <button className="btn btn-ghost btn-sm" disabled={pending === p.id} onClick={() => toggle(p)}>{p.in_stock ? 'Mark out of stock' : 'Mark in stock'}</button>

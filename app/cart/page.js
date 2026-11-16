@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useApp } from '@/lib/app-context';
 import { rupee } from '@/lib/constants';
+import ItemDoodle from '@/components/ItemDoodle';
 import { useToast } from '@/components/Toast';
 import { Empty, Spinner } from '@/components/States';
 
@@ -62,7 +63,8 @@ export default function CartPage() {
         <ul className="mt-4 divide-y divide-line rounded-2xl bg-white ring-1 ring-line">
           {cart.items.map((i) => (
             <li key={i.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-4">
-              <div className="min-w-0 flex-1 basis-40">
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-paper"><ItemDoodle name={i.name} blob="#E3F0ED" size="100%" /></div>
+              <div className="min-w-0 flex-1 basis-32">
                 <p className="line-clamp-2 break-words font-semibold">{i.name}</p>
                 <p className="text-sm text-ink/70">{rupee(i.price)} each</p>
               </div>
