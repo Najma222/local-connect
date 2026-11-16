@@ -23,8 +23,8 @@ create temporary table _lc_demo_config (
   demo_customer_email text not null
 );
 insert into _lc_demo_config (demo_shop_email, demo_customer_email) values
-  ('demo.shop@localconnect.test',      -- DEMO_SHOP_EMAIL
-   'demo.customer@localconnect.test'); -- DEMO_CUSTOMER_EMAIL
+  ('lankanajma@gmail.com',      -- DEMO_SHOP_EMAIL
+   'moonstars2202@gmail.com'); -- DEMO_CUSTOMER_EMAIL
 
 -- Keep the verified flag when this file runs in the SQL Editor (no auth.uid()).
 -- This is the same function as schema.sql, repeated here so demo data also
