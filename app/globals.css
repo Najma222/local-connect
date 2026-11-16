@@ -2,21 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-body { @apply bg-paper text-ink font-body antialiased; }
-h1, h2, h3 { @apply font-display; }
-h1 { @apply text-4xl font-light leading-[1.08] tracking-tight; }
+:root {
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --nav-gap: 0.75rem;
+  --nav-h: 3.75rem;
+  --nav-space: calc(var(--safe-b) + var(--nav-gap) + var(--nav-h));
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { @apply bg-paper text-ink font-body antialiased; overflow-x: hidden; }
+h1, h2, h3 { @apply font-display; overflow-wrap: anywhere; }
+h1 { @apply text-3xl font-light leading-[1.08] tracking-tight sm:text-4xl; }
 h1 b { @apply font-bold; }
 :focus-visible { outline: 3px solid #15141A; outline-offset: 2px; }
+input, select, textarea { font-size: 16px; }
 
 @layer components {
   .btn { @apply inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-white transition active:scale-95 disabled:opacity-50; }
+  .btn-sm { @apply h-11 px-4 text-sm; }
   .btn-accent { @apply bg-marigold text-ink; }
   .btn-ghost { @apply bg-transparent text-ink ring-1 ring-ink; }
-  .field { @apply w-full rounded-2xl border border-line bg-white px-4 py-3 text-[15px] outline-none focus:border-ink; }
+  .field { @apply w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none focus:border-ink; }
   .badge { @apply inline-flex items-center gap-1 rounded-full bg-[#E3F6EA] px-2.5 py-1 text-xs font-semibold text-[#0B6B33]; }
   .hand { font-family: var(--font-hand), cursive; @apply text-xl leading-none; }
-  .go { @apply flex h-10 w-10 items-center justify-center rounded-full bg-white/60; }
+  .go { @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70; }
+  .tap { @apply inline-flex min-h-11 min-w-11 items-center justify-center; }
+  .card-shadow { box-shadow: 0 8px 28px rgba(80, 60, 60, 0.08); }
+  .pb-nav { padding-bottom: calc(var(--nav-space) + 1.5rem); }
+  .bottom-above-nav { bottom: calc(var(--nav-space) + 0.75rem); }
+  .spinner { @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent; }
 }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+.sheet-scroll { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

@@ -2,6 +2,7 @@ import './globals.css';
 import { Outfit, Caveat } from 'next/font/google';
 import { AppProvider } from '@/lib/app-context';
 import Navbar from '@/components/Navbar';
+import { ToastProvider } from '@/components/Toast';
 
 const body = Outfit({ subsets: ['latin'], variable: '--font-body' });
 const hand = Caveat({ subsets: ['latin'], weight: '600', variable: '--font-hand' });
@@ -20,8 +21,10 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${body.variable} ${hand.variable}`}>
       <body>
         <AppProvider>
-          <Navbar />
-          <main className="mx-auto max-w-5xl px-5 pb-32 pt-2">{children}</main>
+          <ToastProvider>
+            <Navbar />
+            <main className="pb-nav mx-auto max-w-6xl px-4 pt-2 sm:px-6 lg:px-8">{children}</main>
+          </ToastProvider>
         </AppProvider>
       </body>
     </html>
