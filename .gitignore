@@ -11,3 +11,5 @@ dev.log
 # Local-only docs (PRD stays tracked)
 docs/*.md
 !docs/PRD.md
+
+.next-build

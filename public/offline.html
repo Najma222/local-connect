@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F5FA">
+<title>Offline | Local Connect</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { display: flex; align-items: center; justify-content: center; background: #F6F5FA; color: #15141A; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom); box-sizing: border-box; }
+  main { max-width: 22rem; text-align: center; }
+  .mark { width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 24px; background: #15141A; display: flex; align-items: center; justify-content: center; }
+  h1 { font-size: 1.75rem; font-weight: 300; line-height: 1.1; margin: 0 0 10px; }
+  h1 b { font-weight: 700; }
+  p { color: #4a4855; line-height: 1.5; margin: 0 0 24px; }
+  button { height: 48px; padding: 0 28px; border: 0; border-radius: 999px; background: #15141A; color: #fff; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+  button:active { transform: scale(0.96); }
+  button:focus-visible { outline: 3px solid #EBD878; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { button:active { transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark" aria-hidden="true">
+    <svg width="36" height="36" viewBox="0 0 24 24"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#EBD878"/></svg>
+  </div>
+  <h1>You are <b>offline</b></h1>
+  <p>Local Connect needs a connection to show shops, orders and the map. Check your network and try again.</p>
+  <button type="button" onclick="location.reload()">Try again</button>
+</main>
+</body>
+</html>

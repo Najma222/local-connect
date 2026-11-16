@@ -1,54 +1,61 @@
 # Local Connect
 
-One app for every shop, service and helper in your neighbourhood. Browse Bangalore shops, add items to a cart, place an order and track it. Shops get a dashboard to list items and manage orders. Works on iPhone as an installable web app (PWA).
+One app for every shop, service and helper in your neighbourhood. Browse local shops, order, post a need, and track it all in real time. Installable on iPhone and Android as a web app (PWA).
 
-**Live demo:** <vercel-url>(in-progress)
+**Live demo:** <add Vercel URL>
 
-## Tech
-Next.js 14 (App Router, JavaScript), Tailwind CSS, Supabase (Postgres, Auth, Storage, RLS, Realtime), Leaflet + OpenStreetMap, Vercel. AI listing is optional.
+## Features
+- Shop discovery with category filters and shop pages
+- Hand-drawn per-item doodles (no photos needed)
+- Live map of nearby shops (Leaflet + OpenStreetMap)
+- Quick needs: post a request, shops reply
+- One-shop cart and realtime order tracking
+- Ratings and reviews
+- Buyer / seller mode switch and a shop dashboard
+- Admin page to verify shops
+- Optional AI listing helper ("Fill with AI")
+- Installable PWA with an offline page
 
-## What the demo data contains
-`supabase/demo-bangalore.sql` adds 18 invented Bangalore shops (2 per category) around Indiranagar, Koramangala, HSR Layout, Jayanagar, Malleshwaram and Whitefield, with 3 to 5 items each and rupee pricing. It also adds:
+Product details are in [docs/PRD.md](docs/PRD.md).
 
-- 12 verified and 6 unverified shops, with approximate map coordinates.
-- 4 bakery orders for the demo customer in `new`, `accepted`, `ready` and `completed` states, plus 1 review.
-- 3 open needs (leaking tap, Friday cake, airport drop) and 1 reply from the plumbing shop.
-- Ownership of 3 shops (bakery, plumber, taxi) for the demo shop account, when that account exists.
+## Tech stack
+Next.js 14 (App Router, plain JavaScript), Tailwind CSS 3, Supabase (Postgres, Auth, Storage, RLS, Realtime), Leaflet, Gemini or Anthropic for the optional AI listing, Vercel for hosting.
 
-Shop and item `image_url` values are left empty on purpose: the app draws hand-drawn doodles. Add real photos later for 3 to 4 hero shops only.
-
-## Setup
+## Local setup
 1. Create a free project at supabase.com.
-2. In **SQL Editor**, run the files in this exact order:
-   1. `supabase/schema.sql`
-   2. `supabase/seed.sql` (removes the old Delhi demo rows; no new data)
-   3. `supabase/update-v2.sql` (map, quick needs, ratings, realtime)
-   4. `supabase/demo-bangalore.sql` (Bangalore demo data; safe to run again)
-3. **Authentication → Providers → Email:** turn off **Confirm email** so demo sign-ups work immediately.
-4. Copy `.env.example` to `.env.local` and fill in the Supabase URL and anon key. `ANTHROPIC_API_KEY` is optional; without it the AI button shows a friendly message and manual entry still works.
-5. `npm install` then `npm run dev` (http://localhost:3000).
+2. Run the SQL files (next section).
+3. In **Authentication > Providers > Email**, turn off **Confirm email** so demo sign-ups work immediately.
+4. Copy `.env.example` to `.env.local` and fill in the Supabase URL and anon key (Project Settings > API).
+5. `npm install`, then `npm run dev` and open http://localhost:3000.
 
-## Create the two demo accounts first
-The demo SQL links ownership, orders and needs by email. Create these accounts in the app, then run `demo-bangalore.sql`:
+## Supabase SQL run order
+Run these in the Supabase SQL Editor.
 
-| Account | How to create it | Used by the demo |
+1. `supabase/run-first.sql`: one-paste first-time setup. It contains `schema.sql`, `seed.sql` and `update-v2.sql` in the right order. Use this on a fresh project.
+2. Sign up your demo accounts in the app (see below).
+3. `supabase/demo-bangalore.sql`: Bangalore demo data. Safe to run again.
+
+Alternative to step 1: run `schema.sql`, then `seed.sql`, then `update-v2.sql` yourself. Do not run both routes.
+
+## Demo accounts
+`demo-bangalore.sql` links ownership, orders and needs by email. Sign up two accounts in the app:
+
+| Account | Sign up as | Gets |
 |---|---|---|
-| Shop | Sign up with **I run a shop** | Owns the bakery, the plumber and the taxi shop |
-| Customer | Sign up with **I want to buy** | Owns the 4 orders, 3 needs and 1 review |
+| Shop | I run a shop | The bakery, plumber and taxi shops |
+| Customer | I want to buy | 4 orders, 3 needs and 1 review |
 
-Before running `demo-bangalore.sql`, replace the two placeholder emails at the top of that file:
+Then edit the config block at the top of `supabase/demo-bangalore.sql` and replace the two emails with the ones you signed up with, for example:
 
 ```sql
--- DEMO_SHOP_EMAIL
-'demo.shop@localconnect.test'
--- DEMO_CUSTOMER_EMAIL
-'demo.customer@localconnect.test'
+('demo.shop@example.com',      -- DEMO_SHOP_EMAIL
+ 'demo.customer@example.com'); -- DEMO_CUSTOMER_EMAIL
 ```
 
-If you run the demo SQL before creating the accounts, that is fine: it skips them quietly. Run the file again after signing up.
+If an account does not exist yet, that part is skipped quietly. Sign up, then run the file again.
 
 ## Make yourself admin
-Run this in the Supabase SQL Editor after you have signed up in the app (replace the email):
+After signing up, run this in the SQL Editor (replace the email):
 
 ```sql
 insert into public.profiles (id, full_name, role)
@@ -58,24 +65,54 @@ where email = 'ADMIN_EMAIL'
 on conflict (id) do update set role = 'admin';
 ```
 
-Then reload the app. The Admin page appears in your Profile. Only admins can set the verified badge.
+Reload the app. The Admin page appears in your Profile. Only admins can set the verified badge.
 
-## Deploy (Vercel)
-1. Push to a public GitHub repo (`.env.local` is git-ignored; never commit keys).
-2. vercel.com → Add New Project → import the repo.
-3. Add the same environment variables in the project settings, then Deploy.
-4. Run the admin SQL above for the account you use on the deployed app.
+## Environment variables
+| Name | Required | Used in | Visibility |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase client (`lib/supabase.js`) | Public (sent to browser) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase client | Public (protected by RLS) |
+| `GEMINI_API_KEY` | No | `app/api/ai-listing/route.js` | Server only |
+| `GEMINI_MODEL` | No | AI route (default `gemini-3.5-flash`) | Server only |
+| `ANTHROPIC_API_KEY` | No | AI route, used only if no Gemini key | Server only |
 
-## Test on your iPhone (no Mac or Android needed)
-1. Open your Vercel link in **Safari** on the iPhone.
-2. Tap Share → **Add to Home Screen**. It opens full screen like an app.
-3. Use two accounts: the shop account in a second browser or private tab, so you can see the order tracking move while the customer stays signed in.
+The AI route uses Gemini if `GEMINI_API_KEY` is set, otherwise Anthropic if `ANTHROPIC_API_KEY` is set. With neither, the AI button shows a friendly message and manual entry still works. Never prefix the AI keys with `NEXT_PUBLIC`.
 
-## Features
-Shop discovery with category filters, shop pages and a one-shop cart, order tracking (realtime), live map (Leaflet), quick needs with shop replies, ratings, buyer/seller mode switch, admin verification, optional AI listing.
+## Deploy to Vercel
+1. Push the repo to GitHub (`.env.local` is git-ignored; never commit keys).
+2. On vercel.com choose **Add New > Project** and import the repo.
+3. Vercel auto-detects Next.js. Leave the build settings alone.
+4. Add environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and optionally `GEMINI_API_KEY`, `GEMINI_MODEL`, `ANTHROPIC_API_KEY`.
+5. Click **Deploy** and note your Vercel URL.
+6. In Supabase go to **Authentication > URL Configuration**. Set **Site URL** to the Vercel URL. Add the Vercel URL and `http://localhost:3000` to **Redirect URLs**.
+7. Run the admin SQL above for the account you use on the deployed app.
 
-## Demo run order (SQL recap)
-`supabase/schema.sql` → `supabase/seed.sql` → `supabase/update-v2.sql` → `supabase/demo-bangalore.sql`.
+If you change environment variables later, redeploy: new values only apply to new deployments.
 
-## Docs
-`docs/SETUP_FROM_SCRATCH.md` (new Supabase project, accounts, git repo and Vercel, start to finish), `docs/PRD.md`, `docs/TECH_STACK.md`, `docs/DEMO_CHECKLIST.md` (the phone test), `docs/AGENT_PROMPT.md` (hand this to another AI agent), `docs/PROMPTS.md`.
+## Install on iPhone
+1. Open the HTTPS Vercel URL in **Safari** (installing needs HTTPS; plain localhost on your PC will not work from a phone).
+2. Tap **Share**, then **Add to Home Screen**, then **Add**.
+3. Open it from the home screen. It runs full screen like an app.
+
+Offline: only a simple "You are offline" page is shown. Shops, orders and the map need a connection.
+
+Updating: close the app fully (swipe it away) and open it again. The latest version loads on the next launch.
+
+## Install on Android
+Open the Vercel URL in Chrome and tap **Install app** (or menu > **Add to Home screen**). Long-press the icon for shortcuts to Map, Orders and Post a need.
+
+## Troubleshooting
+- **Page looks plain or unstyled in dev:** stop the dev server, delete the `.next` folder, run `npm run dev` again. Never run `npm run build` while the dev server is running; it corrupts `.next`.
+- **Orders or needs do not update live:** check the tables are in the `supabase_realtime` publication (`update-v2.sql` adds them).
+- **Sign-up needs an email confirmation:** turn off **Confirm email** in Supabase for the demo.
+- **Old version shows in dev after testing a production build:** the service worker is only registered in production and is removed in dev; reload once.
+
+## Project structure
+```
+app/           Pages (map, orders, need, needs, shop, dashboard, admin, profile, login, cart) and app/api/ai-listing
+components/    UI pieces (Navbar, MapView, Doodle, ItemDoodle, RegisterSW, InstallHint, ...)
+lib/           Supabase client, app context, constants, geo, doodles
+public/        manifest.json, sw.js, offline.html, icons
+supabase/      SQL files (run-first, schema, seed, update-v2, demo-bangalore)
+docs/PRD.md    Product requirements
+```
