@@ -10,6 +10,7 @@ import ItemDoodle from '@/components/ItemDoodle';
 import { useToast } from '@/components/Toast';
 import { Loading, Empty, ErrorState, Spinner } from '@/components/States';
 import { useBadges, refreshBadges } from '@/lib/useBadges';
+import PushToggle from '@/components/PushToggle';
 
 const ACTIVE = ['new', 'accepted', 'ready'];
 const NEXT = { new: { to: 'accepted', label: 'Accept order' }, accepted: { to: 'ready', label: 'Mark ready' }, ready: { to: 'completed', label: 'Mark completed' } };
@@ -58,6 +59,7 @@ export default function Dashboard() {
           </select>
         </label>
       )}
+      <PushToggle className="mt-4" />
       <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Dashboard sections">
         {TABS.map(([t, label]) => (
           <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)} className={`tap rounded-full px-4 text-sm font-semibold ring-1 sm:px-5 ${tab === t ? 'bg-ink text-white ring-ink' : 'bg-white ring-line'}`}>{label}{(t === 'requests' ? badges.requests : t === 'orders' ? badges.newOrders : 0) > 0 && <span className="ml-2 rounded-full bg-[#E29079] px-2 text-xs font-bold text-ink">{t === 'requests' ? badges.requests : badges.newOrders}</span>}</button>
@@ -297,17 +299,19 @@ function Requests({ shop }) {
   const toast = useToast();
   const [needs, setNeeds] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [lost, setLost] = useState([]);
   const [loadErr, setLoadErr] = useState('');
   const [form, setForm] = useState({});
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(null);
   const load = useCallback(async () => {
-    const [a, b] = await Promise.all([
-      supabase.from('needs').select('*, need_responses(shop_id)').eq('status', 'open').in('category', [shop.category, 'other']).order('created_at', { ascending: false }),
+    const [a, b, c] = await Promise.all([
+      supabase.from('needs').select('*, need_responses(shop_id)').eq('status', 'open').in('category', [shop.category, 'other']).neq('customer_id', shop.owner_id).order('created_at', { ascending: false }),
       supabase.from('need_responses').select('*, needs(description, when_text, budget, category, custom_label)').eq('shop_id', shop.id).eq('status', 'accepted').order('created_at', { ascending: false }),
+      supabase.from('need_responses').select('id, price, needs(description)').eq('shop_id', shop.id).eq('status', 'declined').order('created_at', { ascending: false }).limit(5),
     ]);
     if (a.error) { setLoadErr(a.error.message || 'Could not load requests.'); return setNeeds((x) => x || []); }
-    setLoadErr(''); setNeeds(a.data || []); setJobs(b.data || []);
+    setLoadErr(''); setNeeds(a.data || []); setJobs(b.data || []); setLost(c.data || []);
   }, [shop.id, shop.category]);
   useEffect(() => {
     load();
@@ -368,6 +372,14 @@ function Requests({ shop }) {
         </div>
       )}
       {err && <p className="mt-3 break-words text-sm text-tomato" role="alert">{err}</p>}
+      {lost.length > 0 && (
+        <section aria-labelledby="lost-title" className="mt-6">
+          <h2 id="lost-title" className="mb-2 text-base font-semibold text-ink/70">Customer chose another shop</h2>
+          <ul className="space-y-2">
+            {lost.map((r) => <li key={r.id} className="break-words rounded-2xl bg-white p-3 text-sm text-ink/70 ring-1 ring-line">{r.needs?.description}{r.price != null ? ` · you offered ${rupee(r.price)}` : ''}</li>)}
+          </ul>
+        </section>
+      )}
     </>
   );
 }

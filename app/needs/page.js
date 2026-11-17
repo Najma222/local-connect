@@ -9,6 +9,7 @@ import { useToast } from '@/components/Toast';
 import Dialog from '@/components/Dialog';
 import { Loading, Empty, ErrorState, Spinner } from '@/components/States';
 import { refreshBadges } from '@/lib/useBadges';
+import PushToggle from '@/components/PushToggle';
 
 const CHIP = { open: 'Open', booked: 'Booked', closed: 'Closed' };
 
@@ -19,6 +20,7 @@ function List() {
   const [needs, setNeeds] = useState(null);
   const [loadErr, setLoadErr] = useState('');
   const [closing, setClosing] = useState(null);
+  const [askClose, setAskClose] = useState(null);
   const [pick, setPick] = useState(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -42,7 +44,7 @@ function List() {
 
   const close = async (id) => {
     if (closing) return;
-    setClosing(id);
+    setClosing(id); setAskClose(null);
     const { error } = await supabase.from('needs').update({ status: 'closed' }).eq('id', id);
     setClosing(null);
     if (error) toast('Could not close this need. Please try again.', 'error'); else toast('Need closed');
@@ -67,6 +69,7 @@ function List() {
       <p className="mt-5 text-sm text-ink/70">Ask your neighbours</p>
       <div className="flex flex-wrap items-end justify-between gap-2"><h1 className="mt-1">My <b>needs</b></h1><Link href="/need" className="btn btn-accent btn-sm mb-1">Post a need</Link></div>
       {posted && <p className="hand mt-3 -rotate-1 text-2xl text-moss" role="status">Sent! Replies will show up here, live.</p>}
+      <PushToggle className="mt-4" />
       {needs === null ? <Loading label="Loading your needs…" rows={2} /> : loadErr && !needs.length ? <ErrorState message={`We could not load your needs. ${loadErr}`} onRetry={load} /> : needs.length === 0 ? (
         <Empty action={<Link href="/need" className="btn btn-sm">Post a need</Link>}>Nothing posted yet. Tell nearby shops what you need and compare their prices.</Empty>
       ) : (
@@ -109,11 +112,20 @@ function List() {
                     );
                   })}
                 </div>
-                {n.status === 'open' && <button onClick={() => close(n.id)} disabled={closing === n.id} className="tap mt-2 gap-2 px-1 text-sm underline">{closing === n.id && <Spinner />}Close this need</button>}
+                {n.status === 'open' && <button onClick={() => setAskClose(n)} disabled={closing === n.id} className="tap mt-2 gap-2 px-1 text-sm underline">{closing === n.id && <Spinner />}Close this need</button>}
               </article>
             );
           })}
         </div>
+      )}
+      {askClose && (
+        <Dialog title="Close this need?" onClose={() => setAskClose(null)}>
+          <p className="mt-2 text-sm text-ink/80">Shops will stop seeing it and you cannot reopen it. Post a new need if you change your mind.</p>
+          <div className="mt-5 flex gap-2">
+            <button type="button" className="btn btn-ghost flex-1" data-autofocus onClick={() => setAskClose(null)}>Keep it open</button>
+            <button type="button" className="btn flex-1" onClick={() => close(askClose.id)}>Close need</button>
+          </div>
+        </Dialog>
       )}
       {pick && (
         <Dialog title={`Accept ${pick.reply.shops?.name}?`} onClose={() => setPick(null)}>

@@ -1,8 +1,10 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/lib/app-context';
 import { useBadges } from '@/lib/useBadges';
+import { useToast } from '@/components/Toast';
 
 const P = {
   home: 'M3 11l9-8 9 8M5 10v10h14V10',
@@ -23,6 +25,16 @@ export default function Navbar() {
   const b = useBadges();
   const path = usePathname();
   const isShop = profile?.role === 'shop';
+  const toast = useToast();
+  // App-wide heads-up when something new arrives (skips the first load and the page that already shows it).
+  const prev = useRef(b);
+  useEffect(() => {
+    const p = prev.current; prev.current = b;
+    if (!p.loaded || !b.loaded) return;
+    if (b.newOrders > p.newOrders) toast(b.newOrders - p.newOrders > 1 ? `${b.newOrders - p.newOrders} new orders. Open My shop to accept.` : 'New order! Open My shop to accept it.');
+    if (b.requests > p.requests && !path.startsWith('/dashboard')) toast('New request from a neighbour. Open My shop, Requests.');
+    if (b.replies > p.replies && !path.startsWith('/needs')) toast('A shop replied to your need. Tap Ask to see it.');
+  }, [b]); // eslint-disable-line react-hooks/exhaustive-deps
   const side = (href, label, d, badge = 0) => {
     const on = href === '/' ? path === '/' : path.startsWith(href);
     return (
@@ -53,7 +65,7 @@ export default function Navbar() {
       <nav aria-label="Main" className="fixed bottom-[calc(var(--safe-b)+var(--nav-gap))] left-1/2 z-nav flex w-[calc(100%-1rem)] max-w-md -translate-x-1/2 items-end gap-0.5 rounded-[32px] bg-white p-1 shadow-[0_10px_30px_rgba(80,60,60,0.18)]">
         {side('/', 'Explore', P.home)}
         {side('/map', 'Map', P.map)}
-        <Link href="/need" aria-current={askOn ? 'page' : undefined} aria-label={b.replies ? `Ask neighbours, ${b.replies} replies waiting` : 'Ask neighbours: post a need'}
+        <Link href={b.replies > 0 ? '/needs' : '/need'} aria-current={askOn ? 'page' : undefined} aria-label={b.replies ? `Ask neighbours, ${b.replies} replies waiting` : 'Ask neighbours: post a need'}
           className="relative flex h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-end">
           <span className={`absolute -top-6 flex h-14 w-14 items-center justify-center rounded-full text-ink shadow-lg ring-4 ring-white ${askOn ? 'bg-ink text-white' : 'bg-marigold'}`}><Icon d={P.plus} size={26} w={2.5} /></span>
           {b.replies > 0 && <span className="absolute -top-6 left-1/2 ml-4 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E29079] px-1 text-[11px] font-bold text-ink ring-2 ring-white">{b.replies}</span>}

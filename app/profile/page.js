@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { useApp } from '@/lib/app-context';
 import { useToast } from '@/components/Toast';
 import { Loading, Spinner } from '@/components/States';
+import PushToggle from '@/components/PushToggle';
+import { forgetPush } from '@/lib/push';
 
 export default function Profile() {
   const { user, profile, ready, refreshProfile } = useApp();
@@ -39,6 +41,7 @@ export default function Profile() {
       <p className="mt-5 text-sm text-ink/70">Profile</p>
       <h1 className="mt-1 break-words">{profile.full_name || 'Neighbour'}</h1>
       <p className="mt-1 break-all text-sm text-ink/70">{user.email} · {isAdmin ? 'Admin' : isShop ? 'Seller mode' : 'Buyer mode'}</p>
+      <PushToggle always className="mt-6" />
       <ul className="mt-6 space-y-3">
         {rows.map(([href, t, s]) => (
           <li key={href}><Link href={href} className="flex min-h-14 items-center justify-between gap-3 rounded-[24px] bg-white p-4 shadow-sm"><span className="min-w-0"><b className="block">{t}</b><span className="text-sm text-ink/70">{s}</span></span><span className="go bg-soft" aria-hidden="true">→</span></Link></li>
@@ -46,7 +49,7 @@ export default function Profile() {
       </ul>
       {!isAdmin && <button className="btn btn-accent mt-6 h-auto min-h-12 w-full whitespace-normal py-2 text-center" disabled={busy} onClick={switchMode}>{busy && <Spinner />}{isShop ? 'Switch to buyer mode' : 'Switch to seller mode and open a shop'}</button>}
       {err && <p className="mt-2 break-words text-sm text-tomato" role="alert">{err}</p>}
-      <button className="btn btn-ghost mt-3 w-full" onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}>Log out</button>
+      <button className="btn btn-ghost mt-3 w-full" onClick={async () => { await forgetPush(); await supabase.auth.signOut(); router.push('/'); }}>Log out</button>
     </div>
   );
 }

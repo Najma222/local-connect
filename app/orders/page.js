@@ -8,6 +8,7 @@ import { rupee, STEPS, STATUS_LINE, fmtTime } from '@/lib/constants';
 import { useToast } from '@/components/Toast';
 import Dialog from '@/components/Dialog';
 import { Loading, Empty, ErrorState, Spinner } from '@/components/States';
+import PushToggle from '@/components/PushToggle';
 
 const ACTIVE = ['new', 'accepted', 'ready'];
 
@@ -147,7 +148,8 @@ function List() {
     // RLS turns a blocked update into 0 rows (no error), so check that a row actually changed.
     const { data, error } = await supabase.from('orders').update({ status: 'cancelled' }).eq('id', cancel.id).eq('status', 'new').select('id');
     setCancelling(false);
-    if (error || !data?.length) toast('Could not cancel. The shop has already accepted it, so please call them.', 'error'); else toast('Order cancelled');
+    if (error || !data?.length) toast('Could not cancel. The shop has already accepted it, so please call them.', 'error');
+    else { if (seen.current) seen.current[cancel.id] = 'cancelled'; toast('Order cancelled'); } // no second "status changed" toast
     setCancel(null); setTick((t) => t + 1);
   };
 
@@ -160,6 +162,7 @@ function List() {
       <p className="mt-5 text-sm text-ink/70">Track order</p>
       <h1 className="mt-1">My <b>orders</b></h1>
       {placed && <p className="hand mt-3 -rotate-1 text-2xl text-moss" role="status">Order sent! The shop will say yes shortly.</p>}
+      <PushToggle className="mt-4" />
       {orders === null ? <Loading label="Loading your orders…" rows={2} /> : loadErr && !orders.length ? <ErrorState message={`We could not load your orders. ${loadErr}`} onRetry={() => { setOrders(null); setTick((t) => t + 1); }} /> : orders.length === 0 ? (
         <Empty action={<Link href="/" className="btn btn-sm">Browse shops</Link>}>No orders yet. Find something nearby and it will show up here.</Empty>
       ) : (
