@@ -7,9 +7,18 @@ import ShopCard from '@/components/ShopCard';
 import Doodle from '@/components/Doodle';
 import Link from 'next/link';
 import { Loading, Empty, ErrorState } from '@/components/States';
+import { useBadges } from '@/lib/useBadges';
+
+const EXAMPLES = [
+  { label: 'Leaking tap tonight', cat: 'plumbing', text: 'Kitchen tap is leaking under the sink. Need someone this evening.' },
+  { label: 'Cake for Friday', cat: 'bakery', text: 'Need an eggless cake for 10 people on Friday.' },
+  { label: 'Airport drop, 5 am', cat: 'taxi', text: 'Need a cab to Kempegowda Airport at 5 am this Saturday.' },
+  { label: '+ Something else', cat: 'other', text: '' },
+];
 
 export default function Home() {
-  const { profile } = useApp();
+  const { profile, user } = useApp();
+  const badges = useBadges();
   const [shops, setShops] = useState(null);
   const [cat, setCat] = useState('all');
   const [q, setQ] = useState('');
@@ -40,6 +49,30 @@ export default function Home() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Plum cake, plumber, auto to the airport…" aria-label="Search shops" type="search" enterKeyHint="search" autoComplete="off" className="min-w-0 flex-1 bg-transparent text-base outline-none" />
         <span className="go bg-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 3a8 8 0 1 0 0 16 8 8 0 1 0 0-16zM21 21l-4.3-4.3" /></svg></span>
       </label>
+
+      <section className="mt-6 overflow-hidden rounded-[32px] bg-ink p-5 text-white sm:p-7" aria-labelledby="ask-title">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="hand -rotate-1 text-[#EBD878]">free · takes 30 seconds</p>
+            <h2 id="ask-title" className="mt-1 text-2xl font-semibold leading-tight sm:text-3xl">Can't find it? <b className="font-bold">Ask your neighbours.</b></h2>
+            <p className="mt-2 max-w-md text-sm text-white/80">Post what you need. Nearby shops and helpers reply with a price. You accept one and they call you.</p>
+          </div>
+          <span className="hidden shrink-0 sm:block"><Doodle k="chat" blob="#EBD878" size={96} rotate={4} /></span>
+        </div>
+        <ol className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+          {['Post a need', 'Shops reply with a price', 'You accept, they call'].map((t, i) => (
+            <li key={t} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/10 p-3"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EBD878] text-ink">{i + 1}</span>{t}</li>
+          ))}
+        </ol>
+        <div className="no-scrollbar -mx-1 mt-4 flex gap-2 overflow-x-auto px-1" role="group" aria-label="Quick examples">
+          {EXAMPLES.map((e) => <Link key={e.label} href={`/need?cat=${e.cat}&text=${encodeURIComponent(e.text)}`} className="tap shrink-0 rounded-full bg-white/15 px-4 text-sm font-semibold">{e.label}</Link>)}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/need" className="btn btn-accent">Post a need</Link>
+          {user && <Link href="/needs" className="btn btn-ghost !text-white !ring-white/60">{badges.replies > 0 ? `${badges.replies} need${badges.replies > 1 ? 's have' : ' has'} replies` : 'My needs'}</Link>}
+          {profile?.role === 'shop' && badges.requests > 0 && <Link href="/dashboard?tab=requests" className="btn btn-ghost !text-white !ring-white/60">{badges.requests} open request{badges.requests > 1 ? 's' : ''}</Link>}
+        </div>
+      </section>
 
       <div className="mt-7 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {CATEGORIES.map((c, i) => {
@@ -73,9 +106,6 @@ export default function Home() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{shown.map((s, i) => <ShopCard key={s.id} shop={s} i={i} />)}</div>
       )}
-      <Link href="/need" aria-label="Post a quick need" className="bottom-above-nav fixed right-4 z-fab flex h-14 w-14 -rotate-6 items-center justify-center rounded-[20px] bg-ink text-white shadow-xl">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-      </Link>
     </>
   );
 }

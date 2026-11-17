@@ -9,6 +9,10 @@ import Dialog from '@/components/Dialog';
 import ItemDoodle from '@/components/ItemDoodle';
 import { useToast } from '@/components/Toast';
 import { Loading, Empty, ErrorState, Spinner } from '@/components/States';
+import { useBadges, refreshBadges } from '@/lib/useBadges';
+
+const ACTIVE = ['new', 'accepted', 'ready'];
+const NEXT = { new: { to: 'accepted', label: 'Accept order' }, accepted: { to: 'ready', label: 'Mark ready' }, ready: { to: 'completed', label: 'Mark completed' } };
 
 const FILE = 'mt-1 block w-full text-sm file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-soft file:px-4 file:font-semibold file:text-ink';
 
@@ -18,6 +22,7 @@ export default function Dashboard() {
   const [shopId, setShopId] = useState(null);
   const [tab, setTab] = useState('orders');
   const [loadErr, setLoadErr] = useState('');
+  const badges = useBadges();
 
   const loadShops = useCallback(async () => {
     const { data, error } = await supabase.from('shops').select('*').eq('owner_id', user.id).order('created_at');
@@ -26,6 +31,7 @@ export default function Dashboard() {
     setShops(data || []);
   }, [user]);
   useEffect(() => { if (user) loadShops(); }, [user, loadShops]);
+  useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (['orders', 'products', 'requests'].includes(t)) setTab(t); }, []);
 
   if (ready && !user) return <Empty action={<Link href="/login?next=/dashboard" className="btn">Log in</Link>}>Log in to manage your shop.</Empty>;
   if (ready && profile && profile.role !== 'shop') return <Empty action={<Link href="/profile" className="btn btn-sm">Go to profile</Link>}>This page is for shop accounts. Switch to seller mode from your profile to open a shop.</Empty>;
@@ -54,7 +60,7 @@ export default function Dashboard() {
       )}
       <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Dashboard sections">
         {TABS.map(([t, label]) => (
-          <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)} className={`tap rounded-full px-4 text-sm font-semibold ring-1 sm:px-5 ${tab === t ? 'bg-ink text-white ring-ink' : 'bg-white ring-line'}`}>{label}</button>
+          <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)} className={`tap rounded-full px-4 text-sm font-semibold ring-1 sm:px-5 ${tab === t ? 'bg-ink text-white ring-ink' : 'bg-white ring-line'}`}>{label}{(t === 'requests' ? badges.requests : t === 'orders' ? badges.newOrders : 0) > 0 && <span className="ml-2 rounded-full bg-[#E29079] px-2 text-xs font-bold text-ink">{t === 'requests' ? badges.requests : badges.newOrders}</span>}</button>
         ))}
       </div>
       <div key={shop.id} className="mt-5">{tab === 'orders' ? <Orders shop={shop} /> : tab === 'products' ? <Products shop={shop} /> : <Requests shop={shop} />}</div>
@@ -138,28 +144,32 @@ function Orders({ shop }) {
     const { error } = await supabase.from('orders').update({ status }).eq('id', id);
     setPending(null);
     if (error) toast('Could not update the order. Please try again.', 'error'); else toast(`Order marked ${status}`);
-    load();
+    load(); refreshBadges();
   };
   if (!orders) return <Loading label="Loading orders…" rows={2} />;
   if (loadErr && !orders.length) return <ErrorState message={`We could not load orders. ${loadErr}`} onRetry={load} />;
   if (!orders.length) return <Empty>No orders yet. Share your shop page link to get your first one.</Empty>;
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {orders.map((o) => (
-        <article key={o.id} className="min-w-0 rounded-[28px] bg-white p-5 shadow-sm">
+      {[...orders].sort((a, b) => (ACTIVE.includes(a.status) ? 0 : 1) - (ACTIVE.includes(b.status) ? 0 : 1)).map((o) => (
+        <article key={o.id} className={`min-w-0 rounded-[28px] bg-white p-5 shadow-sm ${o.status === 'new' ? 'ring-2 ring-marigold' : ''}`}>
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1 basis-44">
               <p className="break-words font-bold">{o.customer_name}</p>
               <a className="tap -ml-1 justify-start px-1 underline" href={`tel:${o.customer_phone}`}>{o.customer_phone}</a>
               <p className="text-xs text-ink/70">{new Date(o.created_at).toLocaleString()}</p>
             </div>
-            <select aria-label={`Status for order from ${o.customer_name}`} disabled={pending === o.id} className="h-11 rounded-full border border-line bg-paper px-3 text-sm font-semibold capitalize" value={o.status} onChange={(e) => setStatus(o.id, e.target.value)}>
-              {STATUSES.map((s) => <option key={s}>{s}</option>)}
-            </select>
+            <span className="rounded-full bg-soft px-3 py-1 text-xs font-bold capitalize">{o.status}</span>
           </div>
           <ul className="mt-3 space-y-1 text-sm">{o.order_items.map((i) => <li key={i.id} className="break-words">{i.qty} × {i.name}</li>)}</ul>
           {o.note && <p className="mt-2 break-words rounded-lg bg-paper p-2 text-sm">“{o.note}”</p>}
           <p className="mt-2 font-extrabold">{rupee(o.total)}</p>
+          {NEXT[o.status] && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button type="button" disabled={pending === o.id} onClick={() => setStatus(o.id, NEXT[o.status].to)} className="btn btn-accent btn-sm">{pending === o.id && <Spinner />}{NEXT[o.status].label}</button>
+              <button type="button" disabled={pending === o.id} onClick={() => setStatus(o.id, 'cancelled')} className="tap px-2 text-sm text-tomato underline">Cancel order</button>
+            </div>
+          )}
         </article>
       ))}
     </div>
@@ -286,16 +296,25 @@ function Products({ shop }) {
 function Requests({ shop }) {
   const toast = useToast();
   const [needs, setNeeds] = useState(null);
+  const [jobs, setJobs] = useState([]);
   const [loadErr, setLoadErr] = useState('');
   const [form, setForm] = useState({});
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(null);
-  const load = useCallback(() => supabase.from('needs').select('*, need_responses(shop_id)').eq('status', 'open').eq('category', shop.category)
-    .order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (error) { setLoadErr(error.message || 'Could not load requests.'); return setNeeds((x) => x || []); }
-      setLoadErr(''); setNeeds(data || []);
-    }), [shop.category]);
-  useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, [load]);
+  const load = useCallback(async () => {
+    const [a, b] = await Promise.all([
+      supabase.from('needs').select('*, need_responses(shop_id)').eq('status', 'open').in('category', [shop.category, 'other']).order('created_at', { ascending: false }),
+      supabase.from('need_responses').select('*, needs(description, when_text, budget, category, custom_label)').eq('shop_id', shop.id).eq('status', 'accepted').order('created_at', { ascending: false }),
+    ]);
+    if (a.error) { setLoadErr(a.error.message || 'Could not load requests.'); return setNeeds((x) => x || []); }
+    setLoadErr(''); setNeeds(a.data || []); setJobs(b.data || []);
+  }, [shop.id, shop.category]);
+  useEffect(() => {
+    load();
+    const ch = supabase.channel('shop-needs-' + shop.id).on('postgres_changes', { event: '*', schema: 'public', table: 'needs' }, load).on('postgres_changes', { event: '*', schema: 'public', table: 'need_responses' }, load).subscribe();
+    const t = setInterval(load, 10000);
+    return () => { clearInterval(t); supabase.removeChannel(ch); };
+  }, [load, shop.id]);
 
   const reply = async (id) => {
     if (sending) return;
@@ -304,32 +323,51 @@ function Requests({ shop }) {
     const { error } = await supabase.from('need_responses').insert({ need_id: id, shop_id: shop.id, message: f.message || null, price: f.price ? Number(f.price) : null });
     setSending(null);
     if (error) { toast('Could not send your reply. Please try again.', 'error'); return setErr(error.message); }
-    toast('Reply sent');
-    load();
+    toast('Reply sent. You will see it here if the customer accepts.');
+    load(); refreshBadges();
   };
   if (!needs) return <Loading label="Loading requests…" rows={2} />;
   if (loadErr && !needs.length) return <ErrorState message={`We could not load requests. ${loadErr}`} onRetry={load} />;
-  if (!needs.length) return <Empty>No open requests in your category right now. New ones show up here by themselves.</Empty>;
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {needs.map((n) => {
-        const done = n.need_responses.some((r) => r.shop_id === shop.id);
-        const f = form[n.id] || {};
-        return (
-          <article key={n.id} className="min-w-0 rounded-[28px] bg-white p-5 shadow-sm">
-            <p className="break-words text-sm text-ink/70">{n.when_text}{n.budget ? ` · budget ${rupee(n.budget)}` : ''}</p>
-            <p className="mt-1 break-words text-lg font-semibold leading-snug">{n.description}</p>
-            {done ? <p className="hand mt-3 text-xl text-moss">reply sent</p> : (
-              <div className="mt-3 space-y-2">
-                <input className="field" type="number" min="0" inputMode="decimal" placeholder="Your price in ₹" aria-label="Your price in rupees" value={f.price || ''} onChange={(e) => setForm({ ...form, [n.id]: { ...f, price: e.target.value } })} />
-                <input className="field" placeholder="Short message, e.g. I can come at 6 pm" aria-label="Short message" autoComplete="off" value={f.message || ''} onChange={(e) => setForm({ ...form, [n.id]: { ...f, message: e.target.value } })} />
-                <button className="btn btn-accent w-full" disabled={sending === n.id} onClick={() => reply(n.id)}>{sending === n.id && <Spinner />}I can help</button>
-              </div>
-            )}
-          </article>
-        );
-      })}
-      {err && <p className="break-words text-sm text-tomato md:col-span-2" role="alert">{err}</p>}
-    </div>
+    <>
+      {jobs.length > 0 && (
+        <section aria-labelledby="jobs-title" className="mb-6">
+          <h2 id="jobs-title" className="mb-3 text-xl font-semibold">Accepted by customers</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {jobs.map((j) => (
+              <article key={j.id} className="min-w-0 rounded-[28px] bg-[#E3F6EA] p-5 text-[#0B3D22]">
+                <p className="text-sm font-semibold">✓ Booked{j.price != null ? ` · ${rupee(j.price)}` : ''}</p>
+                <p className="mt-1 break-words text-lg font-semibold leading-snug">{j.needs?.description}</p>
+                <p className="mt-2 break-words text-sm">{j.customer_name} · {j.needs?.when_text}</p>
+                {j.customer_phone && <a href={`tel:${j.customer_phone}`} className="btn btn-sm mt-3">Call {j.customer_phone}</a>}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+      <h2 className="mb-3 text-xl font-semibold">Open requests near you</h2>
+      {!needs.length ? <Empty>No open requests right now. New ones appear here by themselves, even custom ones.</Empty> : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {needs.map((n) => {
+            const done = n.need_responses.some((r) => r.shop_id === shop.id);
+            const f = form[n.id] || {};
+            return (
+              <article key={n.id} className="min-w-0 rounded-[28px] bg-white p-5 shadow-sm">
+                <p className="break-words text-sm text-ink/70">{n.category === 'other' && <b className="mr-1 rounded-full bg-[#F4E4DB] px-2 py-0.5 text-ink">Custom: {n.custom_label}</b>}{n.when_text}{n.budget ? ` · budget ${rupee(n.budget)}` : ''}</p>
+                <p className="mt-1 break-words text-lg font-semibold leading-snug">{n.description}</p>
+                {done ? <p className="hand mt-3 text-xl text-moss">reply sent, waiting for the customer</p> : (
+                  <div className="mt-3 space-y-2">
+                    <input className="field" type="number" min="0" inputMode="decimal" placeholder="Your price in ₹" aria-label="Your price in rupees" value={f.price || ''} onChange={(e) => setForm({ ...form, [n.id]: { ...f, price: e.target.value } })} />
+                    <input className="field" placeholder="Short message, e.g. I can come at 6 pm" aria-label="Short message" autoComplete="off" value={f.message || ''} onChange={(e) => setForm({ ...form, [n.id]: { ...f, message: e.target.value } })} />
+                    <button className="btn btn-accent w-full" disabled={sending === n.id} onClick={() => reply(n.id)}>{sending === n.id && <Spinner />}I can help</button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+      {err && <p className="mt-3 break-words text-sm text-tomato" role="alert">{err}</p>}
+    </>
   );
 }

@@ -53,5 +53,11 @@ export default function MapView({ shops, me, selectedId, onPick }) {
     map.current.fitBounds(L.latLngBounds(shops.map((s) => [s.lat, s.lng])), { padding: [48, 48], maxZoom: 14 });
   }, [shops, me]);
   useEffect(() => { if (map.current && me) map.current.setView([me.lat, me.lng], 15); }, [me]);
+  useEffect(() => {
+    if (!map.current || !selectedId) return;
+    const s = shops.find((x) => x.id === selectedId);
+    // Fly to the chosen shop and nudge it above the bottom sheet.
+    if (s) map.current.flyTo([s.lat - 0.0012, s.lng], Math.max(map.current.getZoom(), 15), { duration: 0.6 });
+  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
   return <div ref={el} className="h-full w-full" />;
 }
