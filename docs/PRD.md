@@ -65,5 +65,23 @@ Shop live in under 2 minutes. Item listed in under 60 seconds with AI. 3 taps fr
 | AI fails live | Manual entry still works, and keep a backup screen recording |
 | Push not delivered (iPhone not installed, Focus or battery saver) | In-app alerts and live badges still work; set up demo phones beforehand |
 
-## 11. Future scope
-Online payments (UPI), delivery partners, WhatsApp notifications, in-app chat between customer and shop.
+## 11. Future scope and enhancements
+**Trust and payments**
+- UPI payment links and a "paid" status on orders, so customers can pay in the app.
+- Ratings for completed jobs from needs (not only shop orders), shown on the shop page.
+- Report a shop or a reply; admin moderation queue.
+
+**Smarter matching**
+- Send needs only to shops within a chosen radius (today every shop in the category sees them).
+- Shop opening hours and an "available now" switch, so closed shops do not get requests.
+- Needs that expire on their own after the "when" date, with a reminder to close or repost.
+
+**Communication**
+- In-app chat between customer and shop for a need or an order, instead of only calls.
+- WhatsApp or SMS fallback when push is off.
+- Quiet hours and per-type notification settings; clean up push devices that stopped working.
+
+**Reach and growth**
+- Kannada and Hindi, with voice input for posting needs in those languages.
+- Shop insights: orders per week, reply-to-booking rate, top items.
+- Delivery partners for shops that do not deliver themselves.

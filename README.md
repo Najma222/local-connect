@@ -36,7 +36,7 @@ Run these in the Supabase SQL Editor.
 1. `supabase/run-first.sql`: one-paste first-time setup. It contains `schema.sql`, `seed.sql` and `update-v2.sql` in the right order. Use this on a fresh project.
 2. Sign up your demo accounts in the app (see below).
 3. `supabase/demo-bangalore.sql`: Bangalore demo data. Safe to run again.
-4. `supabase/update-v3.sql`: Round 3 upgrade (accept replies, custom needs, order times, cancel). Safe to run again. See [docs/ROUND3.md](docs/ROUND3.md).
+4. `supabase/update-v3.sql`: Round 3 upgrade (accept replies, custom needs, order times, cancel). Safe to run again.
 5. `supabase/update-v4.sql`: Round 3 hardening (locks down replies and need status, fixes order step times). Safe to run again.
 6. `supabase/update-v5-push.sql`: push notifications. Safe to run again. See **Push notifications** below.
 
