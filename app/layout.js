@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
         <AppProvider>
           <ToastProvider>
             <Navbar />
-            <main className="pb-nav mx-auto max-w-6xl px-4 pt-2 sm:px-6 lg:px-8">{children}</main>
+            <main className="w-full pb-nav mx-auto max-w-6xl px-3 pt-2 sm:px-6 lg:px-8">{children}</main>
             <InstallHint />
             <RegisterSW />
           </ToastProvider>

@@ -11,15 +11,16 @@
 }
 
 html { -webkit-text-size-adjust: 100%; }
-body { @apply bg-paper text-ink font-body antialiased; overflow-x: hidden; }
+body { @apply bg-paper text-ink font-body antialiased; overflow-x: hidden; min-width: 320px; }
 h1, h2, h3 { @apply font-display; overflow-wrap: anywhere; }
 h1 { @apply text-3xl font-light leading-[1.08] tracking-tight sm:text-4xl; }
 h1 b { @apply font-bold; }
 :focus-visible { outline: 3px solid #15141A; outline-offset: 2px; }
 input, select, textarea { font-size: 16px; }
+button, a { -webkit-tap-highlight-color: transparent; }
 
 @layer components {
-  .btn { @apply inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-white transition active:scale-95 disabled:opacity-50; }
+  .btn { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-center text-[15px] font-semibold text-white transition active:scale-95 disabled:opacity-50; }
   .btn-sm { @apply h-11 px-4 text-sm; }
   .btn-accent { @apply bg-marigold text-ink; }
   .btn-ghost { @apply bg-transparent text-ink ring-1 ring-ink; }

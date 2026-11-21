@@ -45,7 +45,7 @@ export default function Home() {
       <p className="mt-5 truncate text-sm text-ink/70">Namaste{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''} · Indiranagar, Bengaluru</p>
       <h1 className="mt-1 max-w-md sm:max-w-lg">What do you need <b>nearby</b> today?</h1>
       <p className="hand mt-2 max-w-prose -rotate-1 text-ink/70 leading-snug">Try a home baker in Indiranagar or an auto to Kempegowda Airport.</p>
-      <label className="mt-5 flex min-h-[60px] max-w-xl items-center justify-between gap-2 rounded-full bg-soft py-1 pl-5 pr-2 focus-within:ring-2 focus-within:ring-ink">
+      <label className="mt-5 flex min-h-[60px] w-full max-w-xl items-center justify-between gap-2 rounded-full bg-soft py-1 pl-5 pr-2 focus-within:ring-2 focus-within:ring-ink">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Plum cake, plumber, auto to the airport…" aria-label="Search shops" type="search" enterKeyHint="search" autoComplete="off" className="min-w-0 flex-1 bg-transparent text-base outline-none" />
         <span className="go bg-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 3a8 8 0 1 0 0 16 8 8 0 1 0 0-16zM21 21l-4.3-4.3" /></svg></span>
       </label>
@@ -59,7 +59,7 @@ export default function Home() {
           </div>
           <span className="hidden shrink-0 sm:block"><Doodle k="chat" blob="#EBD878" size={96} rotate={4} /></span>
         </div>
-        <ol className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+        <ol className="mt-4 grid grid-cols-1 gap-2 text-center text-xs font-semibold sm:grid-cols-3">
           {['Post a need', 'Shops reply with a price', 'You accept, they call'].map((t, i) => (
             <li key={t} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/10 p-3"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EBD878] text-ink">{i + 1}</span>{t}</li>
           ))}
@@ -74,7 +74,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mt-7 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+      <div className="mt-7 grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {CATEGORIES.map((c, i) => {
           const on = cat === c.key;
           return (

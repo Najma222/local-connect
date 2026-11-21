@@ -56,24 +56,24 @@ export default function CartPage() {
   };
 
   return (
-    <div className="grid gap-6 pt-3 md:grid-cols-5 lg:gap-8">
+    <div className="grid min-w-0 gap-6 pt-3 md:grid-cols-5 lg:gap-8">
       <section className="min-w-0 md:col-span-3">
         <h1 className="text-3xl font-bold">Your cart</h1>
         <p className="break-words text-ink/70">Ordering from <b>{cart.shop.name}</b></p>
         <ul className="mt-4 divide-y divide-line rounded-2xl bg-white ring-1 ring-line">
           {cart.items.map((i) => (
-            <li key={i.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-4">
+            <li key={i.id} className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 p-4 sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto]">
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-paper"><ItemDoodle name={i.name} blob="#E3F0ED" size="100%" /></div>
               <div className="min-w-0 flex-1 basis-32">
                 <p className="line-clamp-2 break-words font-semibold">{i.name}</p>
                 <p className="text-sm text-ink/70">{rupee(i.price)} each</p>
               </div>
-              <div className="flex items-center gap-1">
+              <p className="min-w-[4.5rem] text-right font-bold">{rupee(i.price * i.qty)}</p>
+              <div className="col-span-2 flex items-center gap-1 sm:col-span-1">
                 <button type="button" className="tap rounded-full ring-1 ring-line" aria-label={`Remove one ${i.name}`} onClick={() => setQty(i.id, i.qty - 1)}>−</button>
                 <span className="min-w-8 text-center font-bold" aria-live="polite">{i.qty}</span>
                 <button type="button" className="tap rounded-full ring-1 ring-line" aria-label={`Add one ${i.name}`} onClick={() => setQty(i.id, i.qty + 1)}>+</button>
               </div>
-              <p className="min-w-[4.5rem] text-right font-bold">{rupee(i.price * i.qty)}</p>
             </li>
           ))}
         </ul>
